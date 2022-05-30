@@ -1,0 +1,56 @@
+[package]
+name = "trunk-template"
+version = "0.1.0"
+edition = "2021"
+description = "Template for starting a Yew project using Trunk"
+readme = "README.md"
+repository = "https://github.com/yewstack/yew-trunk-minimal-template"
+license = "MIT OR Apache-2.0"
+keywords = ["yew", "trunk"]
+categories = ["gui", "wasm", "web-programming"]
+
+[dependencies]
+yew = "0.19"
+stdweb = "0.4.20"
+gloo-render = "0.1.1"
+wasm-bindgen = "0.2.80"
+js-sys = "0.3.57"
+
+[dependencies.web-sys]
+version = "0.3.57"
+features = [
+  'CanvasRenderingContext2d',
+  'Document',
+  'Element',
+  'HtmlCanvasElement',
+  'Window',
+  'WebGl2RenderingContext',
+  'WebGlActiveInfo',
+  'WebGlBuffer',
+  'WebGlContextAttributes',
+  'WebGlContextEvent',
+  'WebGlContextEventInit',
+  'WebGlFramebuffer',
+  'WebGlPowerPreference',
+  'WebGlProgram',
+  'WebGlQuery',
+  'WebGlRenderbuffer',
+  'WebGlRenderingContext',
+  'WebGlSampler',
+  'WebGlShader',
+  'WebGlShaderPrecisionFormat',
+  'WebGlSync',
+  'WebGlTexture',
+  'WebGlTransformFeedback',
+  'WebGlUniformLocation',
+  'WebGlVertexArrayObject',
+  'WebKitCssMatrix',
+  'WebSocket',
+  'WebSocketDict',
+  'WebSocketElement',
+  'WebglColorBufferFloat',
+  'WebglDebugRendererInfo',
+  'WebglDebugShaders',
+  'WebglDepthTexture',
+  'WebglDrawBuffers'
+]
