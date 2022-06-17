@@ -31,4 +31,10 @@ impl ShaderProgram {
             program,
         }
     }
+
+    /// Get a reference to the shader program's program.
+    #[must_use]
+    pub fn get(&self) -> &WebGlProgram {
+        &self.program
+    }
 }

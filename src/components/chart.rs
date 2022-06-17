@@ -1,10 +1,15 @@
+use std::time::Duration;
+
 use gloo_render::{request_animation_frame, AnimationFrame};
-use log::info;
 use wasm_bindgen::JsCast;
-use web_sys::{HtmlCanvasElement, WebGl2RenderingContext as GL, WebGlProgram};
+use web_sys::{HtmlCanvasElement, WebGl2RenderingContext};
 use yew::{html::Scope, prelude::*};
 
-use crate::webgl::context::RenderingContext;
+use crate::webgl::engine::{
+    program::ShaderProgram,
+    shader::{fragment::FragmentShader, vertex::VertexShader},
+    Engine,
+};
 
 pub enum Msg {
     Render(f64),
@@ -16,13 +21,12 @@ pub struct Props {
 }
 
 pub struct Chart {
-    gl: Option<GL>,
     node_ref: NodeRef,
     _render_loop: Option<AnimationFrame>,
 
-    shader_program: Option<WebGlProgram>,
-
-    context: Option<RenderingContext>,
+    renderer: Option<Engine>,
+    frametime: Duration,
+    frames: u64,
 }
 
 impl Component for Chart {
@@ -32,19 +36,18 @@ impl Component for Chart {
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
-            gl: None,
             node_ref: NodeRef::default(),
             _render_loop: None,
 
-            shader_program: None,
-
-            context: None,
+            renderer: None,
+            frametime: Duration::default(),
+            frames: 0,
         }
     }
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-            <canvas class="chart" ref={self.node_ref.clone()} />
+            <canvas class="chart" width="800" height="600" ref={self.node_ref.clone()} />
         }
     }
 
@@ -53,17 +56,15 @@ impl Component for Chart {
             // Get the canvas
             let canvas = self.node_ref.cast::<HtmlCanvasElement>().unwrap();
 
-            // Get the WebGL2 context
-            let gl: GL = canvas
+            // Get the WebGL2 renderer
+            let gl: WebGl2RenderingContext = canvas
                 .get_context("webgl2")
                 .unwrap()
                 .unwrap()
                 .dyn_into()
                 .unwrap();
 
-            self.context = Some(RenderingContext::new(gl.clone()));
-
-            log::info!("First render of chart");
+            self.renderer = Some(Engine::new(gl.clone(), canvas.width(), canvas.height()));
 
             // The callback to request animation frame is passed a time value which can be used for
             // rendering motion independent of the framerate which may vary.
@@ -72,29 +73,19 @@ impl Component for Chart {
                 request_animation_frame(move |time| link.send_message(Msg::Render(time)))
             };
 
-            // // Initialize open gl shaders
-            // let vert_code = include_str!("./basic.vert");
-            // let frag_code = include_str!("./basic.frag");
+            let r = self.renderer.as_ref().unwrap();
 
-            // let gl = self.gl.as_ref().unwrap();
+            // Initialize webgl `default` shader program
+            let vert_code = include_str!("../../assets/shaders/basic.vert");
+            let frag_code = include_str!("../../assets/shaders/basic.frag");
 
-            // let vert_shader = gl.create_shader(GL::VERTEX_SHADER).unwrap();
-            // gl.shader_source(&vert_shader, vert_code);
-            // gl.compile_shader(&vert_shader);
+            let vertex = VertexShader::new(r.context(), vert_code);
+            let fragment = FragmentShader::new(r.context(), frag_code);
 
-            // let frag_shader = gl.create_shader(GL::FRAGMENT_SHADER).unwrap();
-            // gl.shader_source(&frag_shader, frag_code);
-            // gl.compile_shader(&frag_shader);
+            let program = ShaderProgram::new(r.context(), vertex, fragment);
 
-            // let shader_program = gl.create_program().unwrap();
-            // gl.attach_shader(&shader_program, &vert_shader);
-            // gl.attach_shader(&shader_program, &frag_shader);
-            // gl.link_program(&shader_program);
+            r.context().register_program("default".into(), program);
 
-            // self.shader_program = Some(shader_program);
-
-            // A reference to the handle must be stored, otherwise it is dropped and the render
-            // won't occur.
             self._render_loop = Some(handle);
         }
     }
@@ -102,12 +93,7 @@ impl Component for Chart {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::Render(timestamp) => {
-                info!("Render at {}", timestamp);
-
-                // Render functions are likely to get quite large, so it is good practice to split
-                // it into it's own function rather than keeping it inline in the update match
-                // case. This also allows for updating other UI elements that may be rendered in
-                // the DOM like a framerate counter, or other overlaid textual elements.
+                // Render the scene
                 self.render(timestamp, ctx.link(), ctx.props());
                 false
             }
@@ -117,44 +103,25 @@ impl Component for Chart {
 
 impl Chart {
     fn render(&mut self, timestamp: f64, link: &Scope<Self>, props: &Props) {
-        // let gl = self.gl.as_ref().expect("GL Context not initialized!");
+        // Get instant
+        let now = wasm_timer::Instant::now();
 
-        // // This list of vertices will draw two triangles to cover the entire canvas.
-        // let vertices: Vec<f32> = vec![
-        //     -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
-        // ];
-
-        // let vertex_buffer = gl.create_buffer().unwrap();
-        // let verts = js_sys::Float32Array::from(vertices.as_slice());
-
-        // gl.bind_buffer(GL::ARRAY_BUFFER, Some(&vertex_buffer));
-        // gl.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &verts, GL::STATIC_DRAW);
-
-        // gl.use_program(Some(self.shader_program.as_ref().unwrap()));
-
-        // // Attach the position vector as an attribute for the GL context.
-        // let position =
-        //     gl.get_attrib_location(self.shader_program.as_ref().unwrap(), "a_position") as u32;
-        // gl.vertex_attrib_pointer_with_i32(position, 2, GL::FLOAT, false, 0, 0);
-        // gl.enable_vertex_attrib_array(position);
-
-        // // Attach the color as a uniform for the GL context.
-        // let color = gl.get_uniform_location(self.shader_program.as_ref().unwrap(), "u_color");
-        // gl.uniform3fv_with_f32_array(
-        //     color.as_ref(),
-        //     &[props.color.0, props.color.1, props.color.2],
-        // );
-
-        // let time = gl.get_uniform_location(self.shader_program.as_ref().unwrap(), "u_time");
-        // gl.uniform1f(time.as_ref(), timestamp as f32);
-
-        // gl.draw_arrays(GL::TRIANGLES, 0, 6);
-
-        self.context
+        // Render the scene
+        self.renderer
             .as_ref()
-            .expect("webgl2 context not initialized!")
-            .render::<Self>(timestamp, link, props);
+            .expect("webgl2 renderer not initialized!")
+            .render::<Self>(timestamp, self.frametime, link, props);
 
+        // Update the frametime
+        let el = now.elapsed();
+        self.frametime = el;
+        self.frames += 1;
+
+        if self.frames > 100 && self.frames % 100 == 0 && (timestamp / 1000.0) > 0.0 {
+            info!("{}", self.frames / (timestamp / 1000.0) as u64);
+        }
+
+        // Request the next frame
         let handle = {
             let link = link.clone();
             request_animation_frame(move |time| link.send_message(Msg::Render(time)))
