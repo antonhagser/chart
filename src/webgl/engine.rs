@@ -1,7 +1,8 @@
 use std::{
     cell::{Ref, RefCell},
     collections::HashMap,
-    rc::Rc, time::Duration,
+    rc::Rc,
+    time::Duration,
 };
 
 use web_sys::WebGl2RenderingContext;
@@ -16,6 +17,7 @@ use self::{
 };
 
 pub mod color;
+pub mod draw;
 pub mod perspective;
 pub mod primitives;
 pub mod program;
@@ -23,9 +25,8 @@ pub mod renderer;
 pub mod shader;
 pub mod texture;
 pub mod vertex;
-pub mod draw;
 
-type RenderingContext = Rc<Context>;
+type EngineContext = Rc<Context>;
 
 #[derive(Debug, Clone)]
 #[repr(C)]
@@ -60,7 +61,7 @@ impl Context {
 }
 
 pub struct Engine {
-    context: RenderingContext,
+    context: EngineContext,
 }
 
 impl Engine {
@@ -82,7 +83,13 @@ impl Engine {
         Self { context }
     }
 
-    pub fn render<S: yew::Component>(&self, timestamp: f64, frametime: Duration, _link: &Scope<S>, _props: &Props) {
+    pub fn render<S: yew::Component>(
+        &self,
+        timestamp: f64,
+        frametime: Duration,
+        _link: &Scope<S>,
+        _props: &Props,
+    ) {
         // Begin by clearing the screen.
         self.gl()
             .clear_color(0.074509803921569, 0.078443137254902, 0.082352941176471, 1.0);
@@ -142,7 +149,7 @@ impl Engine {
 
     /// Get the renderer's context.
     #[must_use]
-    pub fn context(&self) -> RenderingContext {
+    pub fn context(&self) -> EngineContext {
         self.context.clone()
     }
 }

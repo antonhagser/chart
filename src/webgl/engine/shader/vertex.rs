@@ -1,6 +1,6 @@
 use web_sys::WebGl2RenderingContext;
 
-use crate::webgl::engine::RenderingContext;
+use crate::webgl::engine::EngineContext;
 
 use super::Shader;
 
@@ -9,7 +9,7 @@ pub struct VertexShader {
 }
 
 impl VertexShader {
-    pub fn new(context: RenderingContext, vert_code: &str) -> Self {
+    pub fn new(context: EngineContext, vert_code: &str) -> Self {
         let vert_shader = context
             .gl()
             .create_shader(WebGl2RenderingContext::VERTEX_SHADER)

@@ -2,7 +2,7 @@ use web_sys::WebGlProgram;
 
 use super::{
     shader::{fragment::FragmentShader, vertex::VertexShader, Shader},
-    RenderingContext,
+    EngineContext,
 };
 
 pub struct ShaderProgram {
@@ -12,7 +12,7 @@ pub struct ShaderProgram {
 }
 
 impl ShaderProgram {
-    pub fn new(ctx: RenderingContext, vertex: VertexShader, fragment: FragmentShader) -> Self {
+    pub fn new(ctx: EngineContext, vertex: VertexShader, fragment: FragmentShader) -> Self {
         let program = ctx
             .gl
             .create_program()

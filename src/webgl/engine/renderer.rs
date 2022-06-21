@@ -1,17 +1,17 @@
-use super::RenderingContext;
+use super::EngineContext;
 
 use layer::Layer;
 
 pub mod layer;
 
 pub struct Renderer {
-    context: RenderingContext,
+    context: EngineContext,
 
     layers: Vec<Layer>,
 }
 
 impl Renderer {
-    pub fn new(context: RenderingContext) -> Self {
+    pub fn new(context: EngineContext) -> Self {
         Self {
             context,
             layers: Vec::new(),

@@ -6,7 +6,7 @@ use web_sys::{WebGl2RenderingContext, WebGlBuffer, WebGlVertexArrayObject};
 
 use self::layout::Layout;
 
-use super::{RenderingContext, draw::DrawInfo};
+use super::{draw::DrawInfo, EngineContext};
 
 pub use default::DefaultVertex;
 
@@ -21,7 +21,7 @@ pub struct VertexArrayObject<'p, V>
 where
     V: Vertex,
 {
-    ctx: RenderingContext,
+    ctx: EngineContext,
     object: WebGlVertexArrayObject,
     program_id: Cow<'p, str>,
     vertices: Option<Vec<V>>,
@@ -35,7 +35,7 @@ where
     V: Vertex,
 {
     pub fn new(
-        ctx: RenderingContext,
+        ctx: EngineContext,
         program_id: Cow<'p, str>,
         mut vertices: Option<Vec<V>>,
         indices: Option<Vec<u32>>,
@@ -146,7 +146,7 @@ where
         }
     }
 
-    pub fn draw(&self, i: DrawInfo) {
+    pub fn draw(&self, _draw_info: DrawInfo) {
         // Get the shader program
         let programs = self.ctx.programs();
         let program = programs
